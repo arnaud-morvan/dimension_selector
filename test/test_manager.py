@@ -26,6 +26,7 @@ class DimensionsManagerTest(unittest.TestCase):
         """Runs before each test."""
         self.manager = None
 
+        self.etages = add_layer('etages.dbf', 'etages')
         self.layer1 = add_layer('point.shp', 'layer1')
         self.layer2 = add_layer('point.shp', 'layer2')
         self.layer2.setSubsetString('"row" = \'1\'')
@@ -42,8 +43,11 @@ class DimensionsManagerTest(unittest.TestCase):
     def _assert_setup_state(self, project=None):
         if project is None:
             project = QgsProject.instance()
+        etages = project.mapLayersByName('etages')[0]
         layer1 = project.mapLayersByName('layer1')[0]
         layer2 = project.mapLayersByName('layer2')[0]
+
+        self.assertEqual(13, etages.featureCount())
 
         self.assertEqual('', layer1.subsetString())
         self.assertEqual(16, layer1.featureCount())
@@ -59,7 +63,7 @@ class DimensionsManagerTest(unittest.TestCase):
             self._init_manager()
 
         dimensions = self.manager.dimensions()
-        dimensions.append(Dimension('column', 'A,B,C,D', True, 'A'))
+        dimensions.append(Dimension('column', 'A,B,C,D', None, True, 'A'))
         self.manager.set_dimensions(dimensions)
 
         for layer in (self.layer1, self.layer2):

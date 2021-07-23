@@ -8,17 +8,25 @@ from qgis.PyQt.QtCore import QObject, pyqtSignal
 
 class Dimension():
 
-    def __init__(self, name, options, active, current_value):
+    def __init__(self, name, options, table, active, current_value):
         self.name = name
         self.options = options
+        self.table = table
         self.active = active
         self.current_value = current_value
 
     def toDict(self):
+        dict_ = self.__dict__.copy()
+        if self.table is not None:
+            dict_["table"] = self.table.id()
         return self.__dict__
 
     @classmethod
     def fromDict(cls, dict_):
+        dict_ = dict_.copy()
+        table_id = dict_.get("table", None)
+        if table_id is not None:
+            dict_["table"] = QgsProject.instance().mapLayer(table_id)
         return cls(**dict_)
 
     def copy(self):
@@ -88,7 +96,8 @@ class DimensionsManager(QObject):
         QgsProject.instance().writeEntry(
             self.scope,
             'dimensions',
-            json.dumps([d.toDict() for d in self._dimensions]))
+            json.dumps([d.toDict() for d in self._dimensions]),
+        )
 
     def saved(self):
         self.refresh_filters()
